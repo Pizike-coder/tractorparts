@@ -1,8 +1,13 @@
 // Google Sheets URL - Multiple formats to try
 const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4gd43143RZ2t41DAzU9CNiZC5_lzzq1T116ZEciAFhR8mDz2tim1zM-4ZSCEC5I8Sy1ak5Xi_pJIc/pub?output=csv';
 const SHEETS_HTML_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4gd43143RZ2t41DAzU9CNiZC5_lzzq1T116ZEciAFhR8mDz2tim1zM-4ZSCEC5I8Sy1ak5Xi_pJIc/pubhtml';
-// CORS proxy as fallback (using a free public CORS proxy)
-const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+// Multiple CORS proxies as fallback
+const CORS_PROXIES = [
+    { url: 'https://api.allorigins.win/raw?url=', format: 'prepend' },
+    { url: 'https://corsproxy.io/?', format: 'prepend' },
+    { url: 'https://api.codetabs.com/v1/proxy?quest=', format: 'prepend' },
+    { url: 'https://cors-anywhere.herokuapp.com/', format: 'prepend' }
+];
 
 // EmailJS Configuration (You'll need to set this up)
 // For now, using a placeholder - you'll need to:
@@ -18,6 +23,9 @@ const EMAILJS_CONFIG = {
 
 let tableData = [];
 let selectedRows = new Set();
+let allTableData = []; // Store all data for search functionality
+let filteredTableData = []; // Store filtered data
+let columnHeaders = ['Column A', 'Column B', 'Column C', 'Column D']; // Store column headers
 
 // Initialize EmailJS (will only work after you configure it)
 if (EMAILJS_CONFIG.USER_ID !== 'YOUR_USER_ID') {
@@ -35,112 +43,201 @@ async function loadData() {
         errorEl.style.display = 'none';
 
         let rows = null;
-        let error = null;
+        let lastError = null;
 
-        // Try method 1: Direct CSV fetch
+        // Try method 1: Direct CSV fetch (with timeout)
         try {
-            const response = await fetch(SHEETS_CSV_URL);
+            console.log('Trying direct CSV fetch...');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
+            const response = await fetch(SHEETS_CSV_URL, {
+                method: 'GET',
+                mode: 'cors',
+                cache: 'no-cache',
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
             if (response.ok) {
                 const csvText = await response.text();
-                rows = parseCSV(csvText);
+                if (csvText && csvText.trim().length > 0 && csvText.includes(',')) {
+                    rows = parseCSV(csvText);
+                    if (rows && rows.length > 0) {
+                        console.log('Direct CSV fetch successful!', rows.length, 'rows');
+                    }
+                } else {
+                    console.log('Direct fetch returned empty or invalid CSV');
+                }
+            } else {
+                console.log('Direct fetch response not OK:', response.status, response.statusText);
+                lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
         } catch (e) {
-            console.log('Direct fetch failed, trying CORS proxy...', e);
-            error = e;
-        }
-
-        // Try method 2: CORS proxy with CSV
-        if (!rows) {
-            try {
-                const proxyUrl = CORS_PROXY + encodeURIComponent(SHEETS_CSV_URL);
-                const response = await fetch(proxyUrl);
-                if (response.ok) {
-                    const csvText = await response.text();
-                    rows = parseCSV(csvText);
-                }
-            } catch (e) {
-                console.log('CORS proxy CSV failed, trying HTML parsing...', e);
-                error = e;
+            if (e.name === 'AbortError') {
+                console.log('Direct fetch timed out');
+                lastError = new Error('Request timed out');
+            } else {
+                console.log('Direct fetch failed:', e.message);
+                lastError = e;
             }
         }
 
-        // Try method 3: Parse HTML table
+        // Try method 2: CORS proxies with CSV
         if (!rows) {
-            try {
-                const proxyUrl = CORS_PROXY + encodeURIComponent(SHEETS_HTML_URL);
-                const response = await fetch(proxyUrl);
-                if (response.ok) {
-                    const htmlText = await response.text();
-                    rows = parseHTMLTable(htmlText);
+            for (let i = 0; i < CORS_PROXIES.length && !rows; i++) {
+                try {
+                    console.log(`Trying CORS proxy ${i + 1} (${CORS_PROXIES[i].url}) with CSV...`);
+                    const proxyUrl = CORS_PROXIES[i].url + encodeURIComponent(SHEETS_CSV_URL);
+                    
+                    const response = await fetch(proxyUrl, {
+                        method: 'GET',
+                        mode: 'cors',
+                        cache: 'no-cache',
+                        headers: {
+                            'Accept': 'text/csv'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const csvText = await response.text();
+                        // Check if we got actual CSV data (not an error page)
+                        if (csvText && csvText.trim().length > 0 && !csvText.includes('<html') && !csvText.includes('error')) {
+                            rows = parseCSV(csvText);
+                            if (rows && rows.length > 0) {
+                                console.log(`CORS proxy ${i + 1} CSV successful!`, rows.length, 'rows');
+                                break;
+                            }
+                        }
+                    } else {
+                        console.log(`CORS proxy ${i + 1} response not OK:`, response.status);
+                    }
+                } catch (e) {
+                    console.log(`CORS proxy ${i + 1} CSV failed:`, e.message);
+                    lastError = e;
                 }
-            } catch (e) {
-                console.log('HTML parsing failed', e);
-                error = e;
+            }
+        }
+
+        // Try method 3: CORS proxies with HTML table
+        if (!rows) {
+            for (let i = 0; i < CORS_PROXIES.length && !rows; i++) {
+                try {
+                    console.log(`Trying CORS proxy ${i + 1} (${CORS_PROXIES[i].url}) with HTML...`);
+                    const proxyUrl = CORS_PROXIES[i].url + encodeURIComponent(SHEETS_HTML_URL);
+                    
+                    const response = await fetch(proxyUrl, {
+                        method: 'GET',
+                        mode: 'cors',
+                        cache: 'no-cache'
+                    });
+                    
+                    if (response.ok) {
+                        const htmlText = await response.text();
+                        // Check if we got actual HTML with a table
+                        if (htmlText && htmlText.includes('<table')) {
+                            rows = parseHTMLTable(htmlText);
+                            if (rows && rows.length > 0) {
+                                console.log(`CORS proxy ${i + 1} HTML successful!`, rows.length, 'rows');
+                                break;
+                            }
+                        }
+                    } else {
+                        console.log(`CORS proxy ${i + 1} HTML response not OK:`, response.status);
+                    }
+                } catch (e) {
+                    console.log(`CORS proxy ${i + 1} HTML failed:`, e.message);
+                    lastError = e;
+                }
             }
         }
 
         if (!rows || rows.length === 0) {
-            throw new Error('Failed to load data from Google Sheets. ' + (error ? error.message : ''));
+            let errorMsg = 'Unable to fetch data from Google Sheets. ';
+            if (lastError) {
+                errorMsg += `Error: ${lastError.message}. `;
+            }
+            errorMsg += 'Possible causes:\n';
+            errorMsg += '1. The Google Sheet may not be published (File > Share > Publish to web)\n';
+            errorMsg += '2. CORS restrictions or network issues\n';
+            errorMsg += '3. The sheet URL may have changed\n';
+            errorMsg += 'Please check the browser console for more details.';
+            throw new Error(errorMsg);
         }
 
-        // Filter rows 1-2000 and columns A, B, C, D (indices 0-3)
-        // Skip header row if present
-        const startIndex = rows[0] && (rows[0][0] === 'Column A' || rows[0][0].toLowerCase().includes('column')) ? 1 : 0;
-        tableData = rows
-            .slice(startIndex, startIndex + 2000) // Rows 1-2000
-            .map((row, index) => ({
-                rowNumber: startIndex + index + 1,
-                colA: (row[0] || '').trim(),
-                colB: (row[1] || '').trim(),
-                colC: (row[2] || '').trim(),
-                colD: (row[3] || '').trim()
-            }))
-            .filter(row => row.colA || row.colB || row.colC || row.colD); // Remove completely empty rows
+        // Extract header row (first row) - always use first row as headers
+        const headerRow = rows[0] || [];
+        columnHeaders = [
+            (headerRow[0] || 'Column A').trim(),
+            (headerRow[1] || 'Column B').trim(),
+            (headerRow[2] || 'Column C').trim(),
+            (headerRow[3] || 'Column D').trim()
+        ];
 
-        // Populate table
-        tableBody.innerHTML = '';
-        if (tableData.length === 0) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="5" style="text-align: center; padding: 20px;">No data available</td>';
-            tableBody.appendChild(tr);
-        } else {
-            tableData.forEach((row, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>
-                        <input type="checkbox" class="row-checkbox" data-index="${index}">
-                    </td>
-                    <td>${escapeHtml(row.colA)}</td>
-                    <td>${escapeHtml(row.colB)}</td>
-                    <td>${escapeHtml(row.colC)}</td>
-                    <td>${escapeHtml(row.colD)}</td>
-                `;
-                tableBody.appendChild(tr);
-            });
-
-            // Add event listeners to checkboxes
-            document.querySelectorAll('.row-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', handleCheckboxChange);
-            });
-
-            // Select all checkbox
+        // Update table header with column names from Google Sheets
+        const tableHead = document.querySelector('#dataTable thead tr');
+        if (tableHead) {
+            tableHead.innerHTML = `
+                <th></th>
+                <th>${escapeHtml(columnHeaders[0])}</th>
+                <th>${escapeHtml(columnHeaders[1])}</th>
+                <th>${escapeHtml(columnHeaders[2])}</th>
+                <th>${escapeHtml(columnHeaders[3])}</th>
+            `;
+            
+            // Re-attach select all event listener
             const selectAllCheckbox = document.getElementById('selectAll');
             if (selectAllCheckbox) {
                 selectAllCheckbox.addEventListener('change', handleSelectAll);
             }
         }
 
+        // Filter rows 2-2001 (skip first row which is header, then take next 2000 rows)
+        // Columns A, B, C, D (indices 0-3)
+        allTableData = rows
+            .slice(1, 2001) // Skip first row (header), take rows 2-2001 (2000 rows)
+            .map((row, index) => ({
+                rowNumber: index + 2, // Row number in sheet (starting from 2, since row 1 is header)
+                colA: (row[0] || '').trim(),
+                colB: (row[1] || '').trim(),
+                colC: (row[2] || '').trim(),
+                colD: (row[3] || '').trim()
+            }))
+            .filter(row => row.colA || row.colB || row.colC || row.colD); // Remove completely empty rows
+        
+        // Initially, show all data
+        filteredTableData = [...allTableData];
+        tableData = filteredTableData;
+
+        // Populate table body
+        renderTable();
+        
+        // Populate SEO content for search engines
+        populateSEOContent();
+
         loadingEl.style.display = 'none';
     } catch (error) {
         console.error('Error loading data:', error);
         loadingEl.style.display = 'none';
         errorEl.style.display = 'block';
+        // Format error message with line breaks
+        const errorLines = error.message.split('\n');
+        const errorHTML = errorLines.map(line => `<p>${escapeHtml(line)}</p>`).join('');
+        
         errorEl.innerHTML = `
             <p><strong>Error loading data from Google Sheets.</strong></p>
-            <p>${error.message}</p>
+            ${errorHTML}
+            <p style="margin-top: 15px; font-size: 0.9em; opacity: 0.9;">
+                <strong>Note:</strong> If you're opening this file directly (file://), try using a local web server instead.
+                <br>You can use Python: <code>python -m http.server 8000</code> or install a simple HTTP server.
+            </p>
             <p style="margin-top: 10px;">
-                <button onclick="loadData()" style="padding: 10px 20px; background: white; border: none; border-radius: 4px; cursor: pointer; color: #ff4444;">
+                <button onclick="loadData()" style="padding: 10px 20px; background: white; border: none; border-radius: 4px; cursor: pointer; color: #ff4444; font-weight: 600;">
                     Retry
+                </button>
+                <button onclick="window.open('${SHEETS_CSV_URL}', '_blank')" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: 600;">
+                    Test URL
                 </button>
             </p>
         `;
@@ -394,6 +491,138 @@ function showFormMessage(message, type) {
     formMessage.className = `form-message ${type}`;
     formMessage.style.display = 'block';
 }
+
+// Search functionality
+function performSearch() {
+    const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+    const searchResults = document.getElementById('searchResults');
+    
+    if (!searchTerm) {
+        // Show all data if search is empty
+        filteredTableData = [...allTableData];
+        tableData = filteredTableData;
+        renderTable();
+        searchResults.style.display = 'none';
+        return;
+    }
+    
+    // Search in Part Number (colA) and Description (colB, colC, colD)
+    filteredTableData = allTableData.filter(row => {
+        const partNumber = (row.colA || '').toLowerCase();
+        const description = `${row.colB || ''} ${row.colC || ''} ${row.colD || ''}`.toLowerCase();
+        
+        return partNumber.includes(searchTerm) || description.includes(searchTerm);
+    });
+    
+    tableData = filteredTableData;
+    renderTable(true); // Clear selections when searching
+    
+    // Show search results count
+    if (filteredTableData.length > 0) {
+        searchResults.textContent = `Found ${filteredTableData.length} result(s)`;
+        searchResults.className = 'search-results show';
+    } else {
+        searchResults.textContent = 'No results found';
+        searchResults.className = 'search-results show';
+    }
+}
+
+// Populate SEO content with part numbers and descriptions for search engines
+function populateSEOContent() {
+    const seoContent = document.getElementById('seoContent');
+    if (!seoContent || !allTableData || allTableData.length === 0) return;
+    
+    // Create SEO-friendly content with part numbers and descriptions
+    // Limit to first 100 items to avoid making the page too large
+    const itemsToShow = allTableData.slice(0, 100);
+    
+    let seoHTML = '<div class="parts-list">';
+    itemsToShow.forEach(row => {
+        const partNumber = escapeHtml(row.colA || '');
+        const description = `${row.colB || ''}`.trim();
+        
+        if (partNumber || description) {
+            seoHTML += `<div class="part-item">`;
+            if (partNumber) {
+                seoHTML += `<span class="part-number">${partNumber}</span>`;
+            }
+            if (description) {
+                seoHTML += `<span class="part-description">${escapeHtml(description)}</span>`;
+            }
+            seoHTML += `</div>`;
+        }
+    });
+    seoHTML += '</div>';
+    
+    seoContent.innerHTML = seoHTML;
+}
+
+// Render table with current tableData
+function renderTable(clearSelections = false) {
+    const tableBody = document.getElementById('tableBody');
+    
+    if (clearSelections) {
+        selectedRows.clear(); // Clear selections when filtering
+    }
+    
+    tableBody.innerHTML = '';
+    if (tableData.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td colspan="5" style="text-align: center; padding: 20px;">No data available</td>';
+        tableBody.appendChild(tr);
+    } else {
+        tableData.forEach((row, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <input type="checkbox" class="row-checkbox" data-index="${index}">
+                </td>
+                <td>${escapeHtml(row.colA)}</td>
+                <td>${escapeHtml(row.colB)}</td>
+                <td>${escapeHtml(row.colC)}</td>
+                <td>${escapeHtml(row.colD)}</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        // Add event listeners to checkboxes
+        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', handleCheckboxChange);
+        });
+        
+        // Reset select all checkbox
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+        }
+    }
+}
+
+// Event listeners for search
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    
+    if (searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
+    }
+    
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            performSearch();
+        });
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    }
+});
 
 // Auto-refresh data daily (every 24 hours)
 setInterval(() => {

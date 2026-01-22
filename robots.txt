@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://www.intrac.ee/sitemap.xml
+
+# Disallow specific paths if needed (currently none)
+# Disallow: /admin/
+# Disallow: /private/

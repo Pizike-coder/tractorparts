@@ -3,7 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Catalog</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="intrac favicon.png">
+    
+    <!-- Google Meta Tags -->
+    <meta name="description" content="Massey Ferguson parts catalog - Browse and order tractor parts online. Search by part number or description.">
+    <meta name="keywords" content="Massey Ferguson, tractor parts, agricultural parts, MF parts, farm equipment">
+    <meta name="author" content="Intrac Eesti AS">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Massey Ferguson Parts Catalog - Intrac Eesti AS">
+    <meta property="og:description" content="Browse and order Massey Ferguson tractor parts online">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="MF8S.jpg">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Massey Ferguson Parts Catalog">
+    <meta name="twitter:description" content="Browse and order Massey Ferguson tractor parts online">
+    
+    <title>Massey Ferguson Parts Catalog - Intrac Eesti AS</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 </head>
@@ -16,17 +38,43 @@
                 <a href="tel:+37253093359" class="contact-link">+372 530 93 359</a>
             </div>
             <div class="contact-item">
-                <span class="contact-label">Email:</span>
-                <a href="#" id="emailContact" class="contact-link">epood@intrac.ee</a>
+                <span class="contact-label"></span>
+                <a href="#" id="emailContact" class="contact-link">ORDER NOW</a>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="container">
-        <header>
-            <h1>Product Catalog</h1>
-            <p class="subtitle">Select items from the list below</p>
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+                <li><a href="/">Home</a></li>
+                <li aria-current="page">Parts Catalog</li>
+            </ol>
+        </nav>
+
+        <header class="main-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="MasseyFerguson_logo.jpg" alt="Massey Ferguson Logo" class="mf-logo">
+                </div>
+                <div class="header-text">
+                    <h1>Massey Ferguson Parts</h1>
+                    <h2>available for immediate delivery</h2>
+                    <p class="subtitle">Select items from the list below and order now</p>
+                </div>
+            </div>
+            
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search by Part Number or Name..." class="search-input">
+                    <button type="button" id="searchBtn" class="search-btn">Search</button>
+                    <button type="button" id="clearSearchBtn" class="clear-search-btn">Clear</button>
+                </div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
         </header>
 
         <!-- Loading Indicator -->
@@ -60,6 +108,22 @@
             </table>
         </div>
     </div>
+
+    <!-- SEO Content - Hidden but visible to search engines -->
+    <div id="seoContent" class="seo-content" aria-hidden="true">
+        <!-- This section contains part numbers and descriptions for SEO purposes -->
+        <!-- Content will be populated by JavaScript -->
+    </div>
+
+    <!-- Footer with Intrac Logo -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-text">More heavy machines parts can be found at our partner's webshop</p>
+            <a href="https://pood.intrac.ee" target="_blank" rel="noopener noreferrer" class="footer-logo-link">
+                <img src="INTRAC_logo.bmp" alt="Intrac Logo" class="intrac-logo">
+            </a>
+        </div>
+    </footer>
 
     <!-- Order Form Modal -->
     <div id="orderModal" class="modal">
