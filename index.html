@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+</head>
+<body>
+    <!-- Fixed Contacts Section -->
+    <div class="contacts-bar">
+        <div class="contacts-content">
+            <div class="contact-item">
+                <span class="contact-label">Phone:</span>
+                <a href="tel:+37253093359" class="contact-link">+372 530 93 359</a>
+            </div>
+            <div class="contact-item">
+                <span class="contact-label">Email:</span>
+                <a href="#" id="emailContact" class="contact-link">epood@intrac.ee</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <header>
+            <h1>Product Catalog</h1>
+            <p class="subtitle">Select items from the list below</p>
+        </header>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading data from Google Sheets...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error" class="error-message" style="display: none;">
+            <p>Error loading data. Please refresh the page.</p>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col">
+                            <input type="checkbox" id="selectAll" title="Select All">
+                        </th>
+                        <th>Column A</th>
+                        <th>Column B</th>
+                        <th>Column C</th>
+                        <th>Column D</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Order Form Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Order Form</h2>
+            
+            <div class="selected-items-section">
+                <h3>Selected Items:</h3>
+                <div id="selectedItemsList" class="selected-items-list">
+                    <!-- Selected items will be displayed here -->
+                </div>
+            </div>
+
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="personName">Person's Name *</label>
+                    <input type="text" id="personName" name="personName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="companyName">Company Name *</label>
+                    <input type="text" id="companyName" name="companyName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number *</label>
+                    <input type="tel" id="phoneNumber" name="phoneNumber" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="emailAddress">Email Address *</label>
+                    <input type="email" id="emailAddress" name="emailAddress" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-order">Order Now</button>
+                    <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+                </div>
+            </form>
+
+            <div id="formMessage" class="form-message"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
