@@ -5,29 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="intrac favicon.png">
+    <link rel="icon" type="image/png" href="intrac_favicon.png">
     
     <!-- Google Meta Tags -->
-    <meta name="description" content="Massey Ferguson parts catalog - Browse and order tractor parts online. Search by part number or description.">
+    <meta name="description" content="Massey Ferguson parts - Browse and order tractor parts online. Search by part number or description.">
     <meta name="keywords" content="Massey Ferguson, tractor parts, agricultural parts, MF parts, farm equipment">
-    <meta name="author" content="Intrac Eesti AS">
+    <meta name="author" content="INTRAC Eesti online shop">
     <meta name="robots" content="index, follow">
     <meta name="googlebot" content="index, follow">
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Massey Ferguson Parts Catalog - Intrac Eesti AS">
+    <meta property="og:title" content="Massey Ferguson Parts - INTRAC Eesti AS">
     <meta property="og:description" content="Browse and order Massey Ferguson tractor parts online">
     <meta property="og:type" content="website">
     <meta property="og:image" content="MF8S.jpg">
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Massey Ferguson Parts Catalog">
+    <meta name="twitter:title" content="Massey Ferguson Parts">
     <meta name="twitter:description" content="Browse and order Massey Ferguson tractor parts online">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://pood.intrac.ee">
     
-    <title>Massey Ferguson Parts Catalog - Intrac Eesti AS</title>
+    <title>Massey Ferguson Parts - INTRAC Eesti online shop</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+    <!-- Clarity-->
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "v5wbc4b0cx");
+    </script>
 </head>
 <body>
     <!-- Fixed Contacts Section -->
@@ -50,7 +62,7 @@
         <nav class="breadcrumbs" aria-label="Breadcrumb">
             <ol>
                 <li><a href="/">Home</a></li>
-                <li aria-current="page">Parts Catalog</li>
+                <li aria-current="page">Parts online</li>
             </ol>
         </nav>
 
@@ -60,11 +72,27 @@
                     <img src="MasseyFerguson_logo.jpg" alt="Massey Ferguson Logo" class="mf-logo">
                 </div>
                 <div class="header-text">
-                    <h1>Massey Ferguson Parts</h1>
-                    <h2>available for immediate delivery</h2>
-                    <p class="subtitle">Select items from the list below and order now</p>
+                    <h1>Massey Ferguson</h1>
+                    <h2>parts available for immediate delivery</h2>
                 </div>
             </div>
+
+            <!-- Introductory copy to increase text content -->
+            <section class="intro-text">
+                <p>
+                    This page lists Massey Ferguson spare parts that are available from us for fast delivery.
+                    You can browse the table of parts, search by part number or part name, and select the items you need for your tractors
+                    and agricultural machines.
+                </p>
+                <p>
+                    When you are ready, tick the checkboxes next to the parts you are interested in and click <strong>ORDER NOW</strong> in the top bar to send us an enquiry.
+                </p>
+                <p>
+                    The list includes engine components, filters, hydraulic parts, transmission and driveline components,
+                    electrical parts, cab details and many other wear items for Massey Ferguson tractors. If you do not find the exact part
+                    you are looking for, contact us and our team will help you identify and source the correct component.
+                </p>
+            </section>
             
             <!-- Search Section -->
             <div class="search-section">
@@ -133,8 +161,21 @@
             
             <div class="selected-items-section">
                 <h3>Selected Items:</h3>
-                <div id="selectedItemsList" class="selected-items-list">
-                    <!-- Selected items will be displayed here -->
+                <div class="selected-items-table-container">
+                    <table class="selected-items-table">
+                        <thead>
+                            <tr>
+                                <th id="selectedHeaderA">Column A</th>
+                                <th id="selectedHeaderB">Column B</th>
+                                <th id="selectedHeaderC">Column C</th>
+                                <th id="selectedHeaderD">Column D</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="selectedItemsList">
+                            <!-- Selected items will be displayed here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 

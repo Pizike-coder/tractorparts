@@ -112,7 +112,7 @@ body {
 .main-header {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
-    padding: 30px;
+    padding: 30px 30px 25px 30px;
     margin-bottom: 30px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }
@@ -160,6 +160,23 @@ body {
     font-size: 1.1em;
     color: #333;
     opacity: 0.9;
+}
+
+/* Intro text block */
+.intro-text {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 0.95em;
+    line-height: 1.6;
+}
+
+.intro-text p {
+    margin-bottom: 10px;
+}
+
+.intro-text strong {
+    color: #c80000;
 }
 
 /* Search Section */
@@ -398,23 +415,70 @@ input[type="checkbox"] {
     border-left: 4px solid #c80000;
 }
 
-.selected-items-list {
-    max-height: 200px;
+.selected-items-table-container {
+    max-height: 300px;
     overflow-y: auto;
     margin-top: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
 }
 
-.selected-item {
-    padding: 8px;
-    margin: 5px 0;
+.selected-items-table {
+    width: 100%;
+    border-collapse: collapse;
     background: white;
+    font-size: 0.9em;
+}
+
+.selected-items-table thead {
+    background: #f0f0f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.selected-items-table th {
+    padding: 10px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #c80000;
+    font-size: 0.9em;
+}
+
+.selected-items-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.selected-items-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+.selected-item-row {
+    transition: background-color 0.2s ease;
+}
+
+.quantity-input {
+    width: 80px;
+    padding: 6px 8px;
+    border: 2px solid #e0e0e0;
     border-radius: 4px;
     font-size: 0.9em;
-    border: 1px solid #e0e0e0;
+    text-align: center;
 }
 
-.selected-item strong {
-    color: #c80000;
+.quantity-input:focus {
+    outline: none;
+    border-color: #c80000;
+}
+
+.max-quantity-hint {
+    display: block;
+    font-size: 0.75em;
+    color: #666;
+    margin-top: 4px;
+    font-style: italic;
 }
 
 /* Form Styles */

@@ -350,28 +350,98 @@ document.getElementById('emailContact').addEventListener('click', function(e) {
     openOrderModal();
 });
 
+// Store item quantities for order form
+let itemQuantities = new Map();
+
 // Open order modal
 function openOrderModal() {
     const modal = document.getElementById('orderModal');
     const selectedItemsList = document.getElementById('selectedItemsList');
     
+    // Update column headers in the order form
+    const headerA = document.getElementById('selectedHeaderA');
+    const headerB = document.getElementById('selectedHeaderB');
+    const headerC = document.getElementById('selectedHeaderC');
+    const headerD = document.getElementById('selectedHeaderD');
+    
+    if (headerA && columnHeaders[0]) headerA.textContent = columnHeaders[0];
+    if (headerB && columnHeaders[1]) headerB.textContent = columnHeaders[1];
+    if (headerC && columnHeaders[2]) headerC.textContent = columnHeaders[2];
+    if (headerD && columnHeaders[3]) headerD.textContent = columnHeaders[3];
+    
     // Clear previous selections
     selectedItemsList.innerHTML = '';
+    itemQuantities.clear();
     
-    // Display selected items
+    // Display selected items in table format
     const sortedIndices = Array.from(selectedRows).sort((a, b) => a - b);
     sortedIndices.forEach(index => {
         const row = tableData[index];
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'selected-item';
-        itemDiv.innerHTML = `
-            <strong>Row ${row.rowNumber}:</strong> 
-            ${escapeHtml(row.colA)} | 
-            ${escapeHtml(row.colB)} | 
-            ${escapeHtml(row.colC)} | 
-            ${escapeHtml(row.colD)}
+        const tr = document.createElement('tr');
+        tr.className = 'selected-item-row';
+        tr.setAttribute('data-index', index);
+        
+        // Try to parse quantity from Column D (assuming it might contain quantity)
+        let maxQuantity = null;
+        const colDValue = row.colD.trim();
+        if (colDValue) {
+            const parsedQty = parseInt(colDValue);
+            if (!isNaN(parsedQty) && parsedQty > 0) {
+                maxQuantity = parsedQty;
+            }
+        }
+        
+        // If no valid quantity found, allow unlimited (set a high max)
+        const maxQty = maxQuantity || 9999;
+        const defaultQty = 1;
+        
+        // Store initial quantity
+        itemQuantities.set(index, defaultQty);
+        
+        tr.innerHTML = `
+            <td>${escapeHtml(row.colA)}</td>
+            <td>${escapeHtml(row.colB)}</td>
+            <td>${escapeHtml(row.colC)}</td>
+            <td>${escapeHtml(row.colD)}</td>
+            <td>
+                <input type="number" 
+                       class="quantity-input" 
+                       data-index="${index}"
+                       data-max="${maxQty}"
+                       min="1" 
+                       max="${maxQty}" 
+                       value="${defaultQty}" 
+                       required>
+                ${maxQuantity ? `<span class="max-quantity-hint">(max: ${maxQuantity})</span>` : ''}
+            </td>
         `;
-        selectedItemsList.appendChild(itemDiv);
+        selectedItemsList.appendChild(tr);
+        
+        // Add event listener to quantity input
+        const quantityInput = tr.querySelector('.quantity-input');
+        quantityInput.addEventListener('change', function() {
+            const value = parseInt(this.value);
+            const max = parseInt(this.dataset.max);
+            if (value < 1) {
+                this.value = 1;
+                itemQuantities.set(index, 1);
+            } else if (value > max) {
+                this.value = max;
+                itemQuantities.set(index, max);
+                alert(`Maximum quantity is ${max}`);
+            } else {
+                itemQuantities.set(index, value);
+            }
+        });
+        
+        quantityInput.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            const max = parseInt(this.dataset.max);
+            if (value > max) {
+                this.value = max;
+                itemQuantities.set(index, max);
+            }
+        });
     });
     
     // Reset form
@@ -405,6 +475,28 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
     const formMessage = document.getElementById('formMessage');
     const submitButton = document.querySelector('.btn-order');
     
+    // Validate quantities
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+    let hasInvalidQuantity = false;
+    
+    quantityInputs.forEach(input => {
+        const value = parseInt(input.value);
+        const max = parseInt(input.dataset.max);
+        if (isNaN(value) || value < 1 || value > max) {
+            hasInvalidQuantity = true;
+            input.style.borderColor = '#ff4444';
+        } else {
+            input.style.borderColor = '#e0e0e0';
+            const index = parseInt(input.dataset.index);
+            itemQuantities.set(index, value);
+        }
+    });
+    
+    if (hasInvalidQuantity) {
+        showFormMessage('Please enter valid quantities for all items (between 1 and the maximum available).', 'error');
+        return;
+    }
+    
     // Get form data
     const formData = {
         personName: document.getElementById('personName').value,
@@ -413,7 +505,8 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
         emailAddress: document.getElementById('emailAddress').value,
         selectedItems: Array.from(selectedRows).sort((a, b) => a - b).map(index => {
             const row = tableData[index];
-            return `Row ${row.rowNumber}: ${row.colA} | ${row.colB} | ${row.colC} | ${row.colD}`;
+            const quantity = itemQuantities.get(index) || 1;
+            return `Row ${row.rowNumber}: ${row.colA} | ${row.colB} | ${row.colC} | ${row.colD} | Quantity: ${quantity}`;
         })
     };
     
