@@ -459,6 +459,19 @@ input[type="checkbox"] {
     transition: background-color 0.2s ease;
 }
 
+.selected-summary-row {
+    background: #f5f5f5;
+    font-weight: 600;
+}
+
+.selected-summary-row td {
+    border-top: 2px solid #c80000;
+}
+
+.selected-summary-row td:last-child {
+    text-align: right;
+}
+
 .quantity-input {
     width: 80px;
     padding: 6px 8px;
@@ -641,7 +654,7 @@ input[type="checkbox"] {
     left: -9999px;
     width: 1px;
     height: 1px;
-    overflow: visible;
+    overflow: hidden;
     /* Keep visibility visible for search engines, but position off-screen */
     visibility: visible;
     opacity: 0;

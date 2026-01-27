@@ -353,6 +353,42 @@ document.getElementById('emailContact').addEventListener('click', function(e) {
 // Store item quantities for order form
 let itemQuantities = new Map();
 
+// Helper: parse numeric value (price or stock) from string
+function parseNumberValue(value) {
+    if (!value) return 0;
+    const normalized = value.toString().replace(/[^0-9,.\-]/g, '').replace(',', '.');
+    const num = parseFloat(normalized);
+    return isNaN(num) ? 0 : num;
+}
+
+// Update per-row totals and grand total in the order form
+function updateOrderTotals() {
+    const rows = document.querySelectorAll('.selected-item-row');
+    let grandTotal = 0;
+
+    rows.forEach(tr => {
+        const index = parseInt(tr.dataset.index);
+        const row = tableData[index];
+        const qty = itemQuantities.get(index) || 1;
+
+        // Sales price is in Column C
+        const price = parseNumberValue(row.colC);
+        const rowTotal = price * qty;
+
+        const totalCell = tr.querySelector('.total-cell');
+        if (totalCell) {
+            totalCell.textContent = rowTotal > 0 ? rowTotal.toFixed(2) + ' €' : '-';
+        }
+
+        grandTotal += rowTotal;
+    });
+
+    const grandEl = document.getElementById('selectedGrandTotal');
+    if (grandEl) {
+        grandEl.textContent = grandTotal > 0 ? grandTotal.toFixed(2) + ' €' : '-';
+    }
+}
+
 // Open order modal
 function openOrderModal() {
     const modal = document.getElementById('orderModal');
@@ -381,18 +417,18 @@ function openOrderModal() {
         tr.className = 'selected-item-row';
         tr.setAttribute('data-index', index);
         
-        // Try to parse quantity from Column D (assuming it might contain quantity)
+        // Stock quantity is in Column D (Stock qty)
         let maxQuantity = null;
-        const colDValue = row.colD.trim();
-        if (colDValue) {
-            const parsedQty = parseInt(colDValue);
-            if (!isNaN(parsedQty) && parsedQty > 0) {
-                maxQuantity = parsedQty;
+        const stockValue = row.colD ? row.colD.toString().trim() : '';
+        if (stockValue) {
+            const parsedStock = Math.floor(parseNumberValue(stockValue));
+            if (!isNaN(parsedStock) && parsedStock > 0) {
+                maxQuantity = parsedStock;
             }
         }
         
-        // If no valid quantity found, allow unlimited (set a high max)
-        const maxQty = maxQuantity || 9999;
+        // If no valid stock quantity found, set maximum to 1
+        const maxQty = maxQuantity || 1;
         const defaultQty = 1;
         
         // Store initial quantity
@@ -412,8 +448,9 @@ function openOrderModal() {
                        max="${maxQty}" 
                        value="${defaultQty}" 
                        required>
-                ${maxQuantity ? `<span class="max-quantity-hint">(max: ${maxQuantity})</span>` : ''}
+                <span class="max-quantity-hint">(stock qty: ${maxQty})</span>
             </td>
+            <td class="total-cell"></td>
         `;
         selectedItemsList.appendChild(tr);
         
@@ -428,10 +465,11 @@ function openOrderModal() {
             } else if (value > max) {
                 this.value = max;
                 itemQuantities.set(index, max);
-                alert(`Maximum quantity is ${max}`);
+                alert(`Maximum quantity is ${max} (stock qty)`);
             } else {
                 itemQuantities.set(index, value);
             }
+            updateOrderTotals();
         });
         
         quantityInput.addEventListener('input', function() {
@@ -440,9 +478,15 @@ function openOrderModal() {
             if (value > max) {
                 this.value = max;
                 itemQuantities.set(index, max);
+            } else if (value >= 1) {
+                itemQuantities.set(index, value);
             }
+            updateOrderTotals();
         });
     });
+    
+    // Calculate initial totals
+    updateOrderTotals();
     
     // Reset form
     document.getElementById('orderForm').reset();
@@ -493,7 +537,7 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
     });
     
     if (hasInvalidQuantity) {
-        showFormMessage('Please enter valid quantities for all items (between 1 and the maximum available).', 'error');
+        showFormMessage('Please enter valid quantities for all items (between 1 and the Stock qty).', 'error');
         return;
     }
     
@@ -626,8 +670,8 @@ function populateSEOContent() {
     if (!seoContent || !allTableData || allTableData.length === 0) return;
     
     // Create SEO-friendly content with part numbers and descriptions
-    // Limit to first 100 items to avoid making the page too large
-    const itemsToShow = allTableData.slice(0, 100);
+    // Limit to first 100 items to avoid making the page too large (changed to 2000)
+    const itemsToShow = allTableData.slice(0, 2000);
     
     let seoHTML = '<div class="parts-list">';
     itemsToShow.forEach(row => {
