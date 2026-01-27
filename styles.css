@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(rgba(200, 0, 0, 0.85), rgba(150, 0, 0, 0.85)), url('MF8S.jpg') center/cover no-repeat fixed;
+    background: linear-gradient(rgba(200, 0, 0, 0.719), rgba(150, 0, 0, 0.85)), url('MF8S.jpg') center/cover no-repeat fixed;
     min-height: 100vh;
     padding-top: 60px; /* Space for fixed contacts bar */
     background-color: #c80000; /* Fallback red color */

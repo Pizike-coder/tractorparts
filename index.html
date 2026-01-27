@@ -120,7 +120,7 @@
         <!-- Loading Indicator -->
         <div id="loading" class="loading">
             <div class="spinner"></div>
-            <p>Loading data from Google Sheets...</p>
+            <p>Loading data...</p>
         </div>
 
         <!-- Error Message -->
@@ -181,8 +181,9 @@
                                 <th id="selectedHeaderB">Column B</th>
                                 <th id="selectedHeaderC">Column C</th>
                                 <th id="selectedHeaderD">Column D</th>
-                                <th>Quantity</th>
+                                <th>Order qty</th>
                                 <th>Total</th>
+                                <th>Remove</th>
                             </tr>
                         </thead>
                         <tbody id="selectedItemsList">
@@ -190,8 +191,9 @@
                         </tbody>
                         <tfoot>
                             <tr class="selected-summary-row">
-                                <td colspan="5">Total</td>
+                                <td colspan="5">Order total</td>
                                 <td id="selectedGrandTotal">0.00</td>
+                                <td></td>
                             </tr>
                         </tfoot>
                     </table>

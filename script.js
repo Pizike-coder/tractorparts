@@ -154,12 +154,12 @@ async function loadData() {
         }
 
         if (!rows || rows.length === 0) {
-            let errorMsg = 'Unable to fetch data from Google Sheets. ';
+            let errorMsg = 'Unable to fetch data... ';
             if (lastError) {
                 errorMsg += `Error: ${lastError.message}. `;
             }
             errorMsg += 'Possible causes:\n';
-            errorMsg += '1. The Google Sheet may not be published (File > Share > Publish to web)\n';
+            errorMsg += '1. The data may not be published\n';
             errorMsg += '2. CORS restrictions or network issues\n';
             errorMsg += '3. The sheet URL may have changed\n';
             errorMsg += 'Please check the browser console for more details.';
@@ -226,7 +226,7 @@ async function loadData() {
         const errorHTML = errorLines.map(line => `<p>${escapeHtml(line)}</p>`).join('');
         
         errorEl.innerHTML = `
-            <p><strong>Error loading data from Google Sheets.</strong></p>
+            <p><strong>Error loading data...</strong></p>
             ${errorHTML}
             <p style="margin-top: 15px; font-size: 0.9em; opacity: 0.9;">
                 <strong>Note:</strong> If you're opening this file directly (file://), try using a local web server instead.
@@ -371,8 +371,8 @@ function updateOrderTotals() {
         const row = tableData[index];
         const qty = itemQuantities.get(index) || 1;
 
-        // Sales price is in Column C
-        const price = parseNumberValue(row.colC);
+        // Sales price is in Column D (SalesPrice EUR)
+        const price = parseNumberValue(row.colD);
         const rowTotal = price * qty;
 
         const totalCell = tr.querySelector('.total-cell');
@@ -417,9 +417,9 @@ function openOrderModal() {
         tr.className = 'selected-item-row';
         tr.setAttribute('data-index', index);
         
-        // Stock quantity is in Column D (Stock qty)
+        // Stock quantity is in Column C (Stock qty)
         let maxQuantity = null;
-        const stockValue = row.colD ? row.colD.toString().trim() : '';
+        const stockValue = row.colC ? row.colC.toString().trim() : '';
         if (stockValue) {
             const parsedStock = Math.floor(parseNumberValue(stockValue));
             if (!isNaN(parsedStock) && parsedStock > 0) {
@@ -448,9 +448,11 @@ function openOrderModal() {
                        max="${maxQty}" 
                        value="${defaultQty}" 
                        required>
-                <span class="max-quantity-hint">(stock qty: ${maxQty})</span>
             </td>
             <td class="total-cell"></td>
+            <td>
+                <button type="button" class="remove-selected-item-btn" data-index="${index}" aria-label="Remove item">×</button>
+            </td>
         `;
         selectedItemsList.appendChild(tr);
         
@@ -483,6 +485,26 @@ function openOrderModal() {
             }
             updateOrderTotals();
         });
+
+        // Remove button handler
+        const removeBtn = tr.querySelector('.remove-selected-item-btn');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                const rowIndex = parseInt(this.dataset.index);
+                // Remove from selectedRows and quantities
+                selectedRows.delete(rowIndex);
+                itemQuantities.delete(rowIndex);
+                // Uncheck checkbox in main table
+                const checkbox = document.querySelector(`.row-checkbox[data-index="${rowIndex}"]`);
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+                // Remove row from table
+                tr.remove();
+                // Recalculate totals
+                updateOrderTotals();
+            });
+        }
     });
     
     // Calculate initial totals
@@ -601,7 +623,7 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
         }
         
         // Success
-        showFormMessage('Order submitted successfully! Email sent to kaia@intrac.ee', 'success');
+        showFormMessage('Order submitted successfully! Email sent to epooda@intrac.ee', 'success');
         
         // Reset form after 2 seconds
         setTimeout(() => {
