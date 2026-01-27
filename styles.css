@@ -641,7 +641,7 @@ input[type="checkbox"] {
     left: -9999px;
     width: 1px;
     height: 1px;
-    overflow: hidden;
+    overflow: visible;
     /* Keep visibility visible for search engines, but position off-screen */
     visibility: visible;
     opacity: 0;
