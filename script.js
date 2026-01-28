@@ -783,55 +783,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Generate sitemap XML for all part numbers
-function generateSitemapXML() {
+// Export sitemap data as JSON for backend processing
+function exportSitemapData() {
     if (!allTableData || allTableData.length === 0) {
         console.log('No data available for sitemap generation');
         return;
     }
     
-    let sitemapXML = '<?xml version="1.0" encoding="UTF-8"?>\n';
-    sitemapXML += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n';
-    sitemapXML += '        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n';
-    sitemapXML += '        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9\n';
-    sitemapXML += '        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">\n';
+    const partNumbers = allTableData
+        .filter(row => row.colA && row.colA.trim())
+        .map(row => row.colA.trim());
     
-    // Add main URLs
-    sitemapXML += '    <url>\n';
-    sitemapXML += '        <loc>https://www.masinaosad.ee/</loc>\n';
-    sitemapXML += '        <lastmod>' + new Date().toISOString().split('T')[0] + '</lastmod>\n';
-    sitemapXML += '        <changefreq>daily</changefreq>\n';
-    sitemapXML += '        <priority>1.0</priority>\n';
-    sitemapXML += '    </url>\n';
+    const sitemapData = {
+        generatedDate: new Date().toISOString().split('T')[0],
+        mainUrls: [
+            'https://www.masinaosad.ee/',
+            'https://pood.intrac.ee/'
+        ],
+        partUrls: partNumbers.map(part => ({
+            part: part,
+            url: 'https://www.masinaosad.ee/?part=' + encodeURIComponent(part)
+        }))
+    };
     
-    sitemapXML += '    <url>\n';
-    sitemapXML += '        <loc>https://pood.intrac.ee/</loc>\n';
-    sitemapXML += '        <lastmod>' + new Date().toISOString().split('T')[0] + '</lastmod>\n';
-    sitemapXML += '        <changefreq>daily</changefreq>\n';
-    sitemapXML += '        <priority>1.0</priority>\n';
-    sitemapXML += '    </url>\n';
+    console.log('Sitemap data exported with ' + partNumbers.length + ' part numbers');
+    console.log('Sample: ', sitemapData.partUrls.slice(0, 3));
     
-    // Add URLs for each part number
-    allTableData.forEach(row => {
-        if (row.colA && row.colA.trim()) {
-            const partNumber = encodeURIComponent(row.colA.trim());
-            sitemapXML += '    <url>\n';
-            sitemapXML += '        <loc>https://www.masinaosad.ee/?part=' + partNumber + '</loc>\n';
-            sitemapXML += '        <lastmod>' + new Date().toISOString().split('T')[0] + '</lastmod>\n';
-            sitemapXML += '        <changefreq>weekly</changefreq>\n';
-            sitemapXML += '        <priority>0.8</priority>\n';
-            sitemapXML += '    </url>\n';
-        }
-    });
-    
-    sitemapXML += '</urlset>';
-    
-    // Log the sitemap XML for debugging
-    console.log('Generated sitemap with ' + allTableData.length + ' part numbers');
-    console.log('First 500 characters of sitemap:\n', sitemapXML.substring(0, 500));
-    
-    // Return the sitemap XML
-    return sitemapXML;
+    return sitemapData;
 }
 
 // Auto-refresh data daily (every 24 hours)
