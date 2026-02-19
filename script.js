@@ -782,36 +782,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
-// Export sitemap data as JSON for backend processing
-function exportSitemapData() {
-    if (!allTableData || allTableData.length === 0) {
-        console.log('No data available for sitemap generation');
-        return;
-    }
-    
-    const partNumbers = allTableData
-        .filter(row => row.colA && row.colA.trim())
-        .map(row => row.colA.trim());
-    
-    const sitemapData = {
-        generatedDate: new Date().toISOString().split('T')[0],
-        mainUrls: [
-            'https://www.masinaosad.ee/',
-            'https://pood.intrac.ee/'
-        ],
-        partUrls: partNumbers.map(part => ({
-            part: part,
-            url: 'https://www.masinaosad.ee/?part=' + encodeURIComponent(part)
-        }))
-    };
-    
-    console.log('Sitemap data exported with ' + partNumbers.length + ' part numbers');
-    console.log('Sample: ', sitemapData.partUrls.slice(0, 3));
-    
-    return sitemapData;
-}
-
 // Auto-refresh data daily (every 24 hours)
 setInterval(() => {
     loadData();

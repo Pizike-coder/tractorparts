@@ -179,6 +179,15 @@ body {
     color: #c80000;
 }
 
+/* Bottom text */
+.bottom-text {
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-size: 0.2em;
+    color: #333;
+    opacity: 0.9;
+}
+
 /* Search Section */
 .search-section {
     margin-top: 20px;
